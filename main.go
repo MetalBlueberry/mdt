@@ -9,8 +9,6 @@ import (
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
 )
 
@@ -95,57 +93,3 @@ some code
 	// gm.Renderer().Render(os.Stdout, source, root)
 }
 
-func NewGoldmark() goldmark.Markdown {
-	extensions := []goldmark.Extender{
-		extension.GFM,
-	}
-	parserOptions := []parser.Option{
-		parser.WithAttribute(), // We need this to enable # headers {#custom-ids}.
-	}
-
-	gm := goldmark.New(
-		goldmark.WithExtensions(extensions...),
-		goldmark.WithParserOptions(parserOptions...),
-	)
-
-	return gm
-}
-
-type MermaidRendered struct {
-	Segment text.Segment
-	Block   MermaidBlock
-}
-
-type MermaidBlock struct {
-	XMLName xml.Name
-	Class   string      `xml:"class,attr"`
-	Img     MermaidImg  `xml:"summary>img"`
-	Code    MermaidCode `xml:"p"`
-}
-
-type MermaidImg struct {
-	Src string `xml:"src,attr"`
-}
-type MermaidCode struct {
-	Code string `xml:",innerxml"`
-}
-
-func parseHTML(src []byte) MermaidBlock {
-	block := MermaidBlock{}
-
-	decoder := xml.NewDecoder(bytes.NewReader(src))
-
-	err := decoder.Decode(&block)
-	if err != nil {
-		panic(err)
-	}
-
-	block.Code.Code = strings.TrimRightFunc(block.Code.Code, unicode.IsSpace)
-
-	return block
-}
-
-func (b *MermaidRendered) Marshal() []byte {
-	d, _ := xml.Marshal(b.Block)
-	return d
-}
