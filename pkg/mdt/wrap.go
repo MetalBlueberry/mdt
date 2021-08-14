@@ -84,8 +84,6 @@ func parseHTML(src []byte) (Block, error) {
 		return Block{}, err
 	}
 
-	// block.Code.Code = strings.TrimRightFunc(block.Code.Code, unicode.IsSpace)
-
 	return block, nil
 }
 

@@ -1,6 +1,7 @@
 package mdt
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 )
@@ -50,11 +51,14 @@ func (ink *MermaidInk) Wrap(f *Fence) (*FenceWrap, error) {
 
 func (ink *MermaidInk) Encode(code []byte) (string, error) {
 	ink.Config.Code = string(code)
-	b, err := json.Marshal(ink.Config)
+	buf := &bytes.Buffer{}
+	encoder := json.NewEncoder(buf)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(ink.Config)
 	if err != nil {
 		return "", err
 	}
-	e := base64.StdEncoding.EncodeToString(b)
+	e := base64.RawURLEncoding.EncodeToString(buf.Bytes())
 	return e, nil
 }
 
