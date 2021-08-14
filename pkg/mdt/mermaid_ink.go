@@ -3,7 +3,6 @@ package mdt
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 )
 
 func NewMermaidInk() *MermaidInk {
@@ -23,8 +22,19 @@ type MermaidInk struct {
 	Config  InkInput
 }
 
+func (ink *MermaidInk) WrapAll(fences []*Fence) ([]*FenceWrap, error) {
+	wraps := make([]*FenceWrap, 0, len(fences))
+	for _, f := range fences {
+		w, err := ink.Wrap(f)
+		if err != nil {
+			return nil, err
+		}
+		wraps = append(wraps, w)
+	}
+	return wraps, nil
+}
+
 func (ink *MermaidInk) Wrap(f *Fence) (*FenceWrap, error) {
-	fmt.Println(string(f.Content()))
 	b64, err := ink.Encode(f.Content())
 	if err != nil {
 		return nil, err
@@ -44,7 +54,6 @@ func (ink *MermaidInk) Encode(code []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(string(b))
 	e := base64.StdEncoding.EncodeToString(b)
 	return e, nil
 }

@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"strings"
-	"unicode"
+	"sort"
 
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
@@ -85,7 +84,7 @@ func parseHTML(src []byte) (Block, error) {
 		return Block{}, err
 	}
 
-	block.Code.Code = strings.TrimRightFunc(block.Code.Code, unicode.IsSpace)
+	// block.Code.Code = strings.TrimRightFunc(block.Code.Code, unicode.IsSpace)
 
 	return block, nil
 }
@@ -96,4 +95,19 @@ func (b *FenceWrap) Marshal() []byte {
 }
 func (b *FenceWrap) Slice() text.Segment {
 	return b.Segment
+}
+
+func ApplyWraps(source []byte, wraps []*FenceWrap) []byte {
+	sort.Slice(wraps, func(i, j int) bool {
+		return wraps[i].Segment.Start < wraps[j].Segment.Start
+	})
+	output := bytes.Buffer{}
+	i := 0
+	for _, w := range wraps {
+		output.Write(source[i:w.Segment.Start])
+		output.Write(w.Marshal())
+		i = w.Segment.Stop
+	}
+	output.Write(source[i:])
+	return output.Bytes()
 }

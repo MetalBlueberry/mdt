@@ -20,9 +20,12 @@ func ParseFences(source []byte, root ast.Node) ([]*Fence, error) {
 			}
 			if string(tnode.Language(source)) == "mermaid" {
 				segment := slice(tnode.Lines())
+				code := source[segment.Start:segment.Stop]
+				segment.Start -= len("```mermaid") + 1
+				segment.Stop += len("```")
 				fences = append(fences, &Fence{
 					Segment: segment,
-					Code:    source[segment.Start:segment.Stop],
+					Code:    code,
 				})
 			}
 		default:
