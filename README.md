@@ -2,7 +2,7 @@
 
 This project implements a few utilities for markdown files that I need personally.
 
-Currently it is implemente a functionality to wrap mermaid diagrams with a html block that renders the code with an url pointing to mermaid ink
+Currently, it is implementing functionality to wrap mermaid diagrams with an HTML block that renders the code with an URL pointing to mermaid ink
 
 ```mermaid
 sequenceDiagram

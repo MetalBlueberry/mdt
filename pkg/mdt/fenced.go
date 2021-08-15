@@ -1,6 +1,8 @@
 package mdt
 
 import (
+	"fmt"
+
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
 )
@@ -15,10 +17,25 @@ func ParseFences(source []byte, root ast.Node) ([]*Fence, error) {
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		switch tnode := n.(type) {
 		case *ast.FencedCodeBlock:
-			if !entering {
+			if entering {
 				return ast.WalkContinue, nil
 			}
 			if string(tnode.Language(source)) == "mermaid" {
+
+				previous := tnode.PreviousSibling()
+				_, htmlBlockBefore := previous.(*ast.HTMLBlock)
+
+				next := tnode.NextSibling()
+				_, htmlBlockAfter := next.(*ast.HTMLBlock)
+
+				fmt.Printf("%T, %T\n", previous, next)
+				if htmlBlockBefore && htmlBlockAfter {
+					return ast.WalkContinue, nil
+				}
+				if p := tnode.Parent().Parent(); p != nil {
+					fmt.Print(tnode.Lines())
+				}
+
 				segment := slice(tnode.Lines())
 				code := source[segment.Start:segment.Stop]
 				segment.Start -= len("```mermaid") + 1

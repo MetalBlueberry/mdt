@@ -55,7 +55,7 @@ func NewBlock(code []byte, src string) Block {
 			Src: src,
 		},
 		Code: Code{
-			Code: fmt.Sprintf("```mermaid\n%s```", string(code)),
+			Code: fmt.Sprintf("\n\n```mermaid\n%s```\n", string(code)),
 		},
 	}
 }
