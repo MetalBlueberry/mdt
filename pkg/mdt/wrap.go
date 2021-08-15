@@ -79,18 +79,14 @@ func ParseWrappedFences(source []byte, root ast.Node) ([]*FenceWrap, error) {
 	return fencesWrap, nil
 }
 
-func NewBlock(code []byte, src string) Block {
-	return Block{
+func NewBlock(mermaid []byte, src string) Block {
+	b := Block{
 		XMLName: xml.Name{Local: "details"},
 		Class:   "mermaid",
-		Img: Img{
-			Src: src,
-		},
-		Code: Code{
-			Code:    fmt.Sprintf("\n\n```mermaid\n%s```\n", string(code)),
-			Mermaid: code,
-		},
 	}
+	b.SetSrc(src)
+	b.SetMermaid(mermaid)
+	return b
 }
 
 type Block struct {
@@ -98,6 +94,18 @@ type Block struct {
 	Class   string `xml:"class,attr"`
 	Img     Img    `xml:"summary>img"`
 	Code    Code   `xml:"p"`
+}
+
+func (b *Block) SetMermaid(mermaid []byte) {
+	b.Code = Code{
+		Code:    fmt.Sprintf("\n\n```mermaid\n%s```\n", string(mermaid)),
+		Mermaid: mermaid,
+	}
+}
+func (b *Block) SetSrc(src string) {
+	b.Img = Img{
+		Src: src,
+	}
 }
 
 type Img struct {

@@ -93,3 +93,46 @@ sequenceDiagram
 `, string(output))
 
 }
+
+func TestUpdateWraps(t *testing.T) {
+	require := require.New(t)
+
+	source := []byte(`
+# hello world
+	
+This is an example
+
+<details class="mermaid"><summary><img src="wrong!"></img></summary><p>
+
+` + "```mermaid" + `
+graph LR
+    id
+` + "```" + `
+</p></details>
+
+`)
+
+	root := goldmark.DefaultParser().Parse(text.NewReader(source))
+	wraps, err := mdt.ParseWrappedFences(source, root)
+	require.NoError(err)
+
+	err = mdt.NewMermaidInk().UpdateAll(wraps)
+	require.NoError(err)
+
+	output := mdt.ApplyWraps(source, wraps)
+	require.Equal(`
+# hello world
+	
+This is an example
+
+<details class="mermaid"><summary><img src="https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBpZFxuIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0K"></img></summary><p>
+
+`+"```mermaid"+`
+graph LR
+    id
+`+"```"+`
+</p></details>
+
+`, string(output))
+
+}

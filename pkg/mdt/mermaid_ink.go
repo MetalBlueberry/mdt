@@ -23,6 +23,26 @@ type MermaidInk struct {
 	Config  InkInput
 }
 
+func (ink *MermaidInk) UpdateAll(wraps []*FenceWrap) error {
+	for _, w := range wraps {
+		err := ink.Update(w)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ink *MermaidInk) Update(f *FenceWrap) error {
+	b64, err := ink.Encode(f.Block.Code.Mermaid)
+	if err != nil {
+		return err
+	}
+
+	f.Block.SetSrc(ink.BaseURL + b64)
+	return nil
+}
+
 func (ink *MermaidInk) WrapAll(fences []*Fence) ([]*FenceWrap, error) {
 	wraps := make([]*FenceWrap, 0, len(fences))
 	for _, f := range fences {

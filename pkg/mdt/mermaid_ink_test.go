@@ -12,7 +12,7 @@ func TestWrap(t *testing.T) {
 
 	wrapper := mdt.NewMermaidInk()
 	wrap, err := wrapper.Wrap(&mdt.Fence{
-		Code: []byte(`graph LR
+		Mermaid: []byte(`graph LR
     id
 `),
 	})
@@ -35,7 +35,7 @@ func TestWrapSequenceDiagram(t *testing.T) {
 
 	wrapper := mdt.NewMermaidInk()
 	wrap, err := wrapper.Wrap(&mdt.Fence{
-		Code: []byte(`sequenceDiagram
+		Mermaid: []byte(`sequenceDiagram
     Alice->>+John: Hello John, how are you?
     Alice->>+John: John, can you hear me?
     John-->>-Alice: Hi Alice, I can hear you!

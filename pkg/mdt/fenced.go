@@ -7,7 +7,7 @@ import (
 
 type Fence struct {
 	Segment text.Segment
-	Code    []byte
+	Mermaid []byte
 }
 
 func ParseFences(source []byte, root ast.Node) ([]*Fence, error) {
@@ -36,12 +36,12 @@ func ParseFences(source []byte, root ast.Node) ([]*Fence, error) {
 				}
 
 				segment := slice(tnode.Lines())
-				code := source[segment.Start:segment.Stop]
+				mermaid := source[segment.Start:segment.Stop]
 				segment.Start -= len("```mermaid") + 1
 				segment.Stop += len("```") + 1
 				fences = append(fences, &Fence{
 					Segment: segment,
-					Code:    code,
+					Mermaid: mermaid,
 				})
 			}
 		default:
@@ -59,8 +59,9 @@ func (f *Fence) Slice() text.Segment {
 	return f.Segment
 }
 
+// Content returns the content inside the fences
 func (f *Fence) Content() []byte {
-	return f.Code
+	return f.Mermaid
 }
 
 func slice(lines *text.Segments) text.Segment {

@@ -81,10 +81,52 @@ var mermaidWrap = &cobra.Command{
 	},
 }
 
+var mermaidUpdate = &cobra.Command{
+	Use:   "update",
+	Short: "updated wrap mermaid fenced code blocks generated with wrap method",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		files := []string{}
+
+		for _, pattern := range args {
+			match, err := filepath.Glob(pattern)
+			if err != nil {
+				log.Fatalf("Invalid pattern, %s", pattern)
+			}
+			files = append(files, match...)
+		}
+
+		logrus.WithField("files", files).Info("found files")
+
+		for _, file := range files {
+			source, err := ioutil.ReadFile(file)
+			if err != nil {
+				panic(err)
+			}
+
+			root := goldmark.DefaultParser().Parse(text.NewReader(source))
+			wraps, err := mdt.ParseWrappedFences(source, root)
+			if err != nil {
+				panic(err)
+			}
+
+			err = mdt.NewMermaidInk().UpdateAll(wraps)
+			if err != nil {
+				panic(err)
+			}
+
+			output := mdt.ApplyWraps(source, wraps)
+			ioutil.WriteFile(file, output, fs.ModePerm)
+			// fmt.Print(string(output))
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(mermaidCmd)
 
 	mermaidCmd.AddCommand(mermaidWrap)
+	mermaidCmd.AddCommand(mermaidUpdate)
 
 	// Here you will define your flags and configuration settings.
 
