@@ -29,6 +29,13 @@ graph LR
 	id
 ` + "```" + `
 
+<div> some html block </div>
+
+` + "```mermaid" + `
+graph LR
+	id
+` + "```" + `
+
 paragraph 
 `)
 
@@ -36,7 +43,7 @@ paragraph
 	fences, err := mdt.ParseFences(source, root)
 	require.NoError(err)
 
-	require.Len(fences, 2)
+	require.Len(fences, 3)
 	for _, fence := range fences {
 
 		require.Equal(`graph LR

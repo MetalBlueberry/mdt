@@ -23,14 +23,18 @@ func ParseFences(source []byte, root ast.Node) ([]*Fence, error) {
 			if string(tnode.Language(source)) == "mermaid" {
 
 				previous := tnode.PreviousSibling()
-				_, htmlBlockBefore := previous.(*ast.HTMLBlock)
+				previousBlock, hasPreviousblock := previous.(*ast.HTMLBlock)
 
 				next := tnode.NextSibling()
-				_, htmlBlockAfter := next.(*ast.HTMLBlock)
+				nextBlock, hasNextBlock := next.(*ast.HTMLBlock)
 
-				fmt.Printf("%T, %T\n", previous, next)
-				if htmlBlockBefore && htmlBlockAfter {
-					return ast.WalkContinue, nil
+				if hasPreviousblock && hasNextBlock {
+					start := previousBlock.Lines().At(0).Start
+					stop := nextBlock.Lines().At(next.Lines().Len() - 1).Stop
+					_, err := parseHTML(source[start:stop])
+					if err == nil {
+						return ast.WalkContinue, nil
+					}
 				}
 				if p := tnode.Parent().Parent(); p != nil {
 					fmt.Print(tnode.Lines())

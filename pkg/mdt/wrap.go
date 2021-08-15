@@ -3,6 +3,7 @@ package mdt
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -82,6 +83,9 @@ func parseHTML(src []byte) (Block, error) {
 	err := decoder.Decode(&block)
 	if err != nil {
 		return Block{}, err
+	}
+	if block.Class != "mermaid" {
+		return block, errors.New("Invalid class")
 	}
 
 	return block, nil
