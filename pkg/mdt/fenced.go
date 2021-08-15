@@ -1,8 +1,6 @@
 package mdt
 
 import (
-	"fmt"
-
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
 )
@@ -36,14 +34,11 @@ func ParseFences(source []byte, root ast.Node) ([]*Fence, error) {
 						return ast.WalkContinue, nil
 					}
 				}
-				if p := tnode.Parent().Parent(); p != nil {
-					fmt.Print(tnode.Lines())
-				}
 
 				segment := slice(tnode.Lines())
 				code := source[segment.Start:segment.Stop]
 				segment.Start -= len("```mermaid") + 1
-				segment.Stop += len("```")
+				segment.Stop += len("```") + 1
 				fences = append(fences, &Fence{
 					Segment: segment,
 					Code:    code,

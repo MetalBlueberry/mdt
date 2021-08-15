@@ -16,26 +16,57 @@ type FenceWrap struct {
 	Block   Block
 }
 
-func ParseFencesWrap(source []byte, root ast.Node) ([]*FenceWrap, error) {
+func ParseWrappedFences(source []byte, root ast.Node) ([]*FenceWrap, error) {
 	fencesWrap := []*FenceWrap{}
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		switch tnode := n.(type) {
-		case *ast.HTMLBlock:
-			if !entering {
+		case *ast.FencedCodeBlock:
+			if entering {
 				return ast.WalkContinue, nil
 			}
-			lastLine := tnode.Lines().Len() - 1
-			first := tnode.Lines().At(0).Start
-			last := tnode.Lines().At(lastLine).Stop
+			if string(tnode.Language(source)) == "mermaid" {
 
-			block, err := parseHTML(source[first:last])
-			if err != nil {
-				return ast.WalkStop, err
+				previous := tnode.PreviousSibling()
+				previousBlock, hasPreviousblock := previous.(*ast.HTMLBlock)
+
+				next := tnode.NextSibling()
+				nextBlock, hasNextBlock := next.(*ast.HTMLBlock)
+
+				if !hasPreviousblock || !hasNextBlock {
+					return ast.WalkContinue, nil
+				}
+
+				start := previousBlock.Lines().At(0).Start
+				stop := nextBlock.Lines().At(next.Lines().Len() - 1).Stop
+
+				block, err := parseHTML(source[start:stop])
+				if err != nil {
+					return ast.WalkContinue, err
+				}
+				segment := slice(tnode.Lines())
+				block.Code.Mermaid = source[segment.Start:segment.Stop]
+
+				fencesWrap = append(fencesWrap, &FenceWrap{
+					Segment: text.NewSegment(start, stop),
+					Block:   block,
+				})
 			}
-			fencesWrap = append(fencesWrap, &FenceWrap{
-				Segment: text.NewSegment(first, last),
-				Block:   block,
-			})
+		// case *ast.HTMLBlock:
+		// 	if !entering {
+		// 		return ast.WalkContinue, nil
+		// 	}
+		// 	lastLine := tnode.Lines().Len() - 1
+		// 	first := tnode.Lines().At(0).Start
+		// 	last := tnode.Lines().At(lastLine).Stop
+
+		// 	block, err := parseHTML(source[first:last])
+		// 	if err != nil {
+		// 		return ast.WalkStop, err
+		// 	}
+		// 	fencesWrap = append(fencesWrap, &FenceWrap{
+		// 		Segment: text.NewSegment(first, last),
+		// 		Block:   block,
+		// 	})
 
 		default:
 			// fmt.Printf("%T : %s : %t\n", n, string(n.Text(source)), n.IsRaw())
@@ -56,7 +87,8 @@ func NewBlock(code []byte, src string) Block {
 			Src: src,
 		},
 		Code: Code{
-			Code: fmt.Sprintf("\n\n```mermaid\n%s```\n", string(code)),
+			Code:    fmt.Sprintf("\n\n```mermaid\n%s```\n", string(code)),
+			Mermaid: code,
 		},
 	}
 }
@@ -72,7 +104,8 @@ type Img struct {
 	Src string `xml:"src,attr"`
 }
 type Code struct {
-	Code string `xml:",innerxml"`
+	Code    string `xml:",innerxml"`
+	Mermaid []byte `xml:"-"`
 }
 
 func parseHTML(src []byte) (Block, error) {
@@ -93,7 +126,7 @@ func parseHTML(src []byte) (Block, error) {
 
 func (b *FenceWrap) Marshal() []byte {
 	d, _ := xml.Marshal(b.Block)
-	return d
+	return append(d, '\n')
 }
 func (b *FenceWrap) Slice() text.Segment {
 	return b.Segment

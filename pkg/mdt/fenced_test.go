@@ -53,7 +53,7 @@ paragraph
 		require.Equal("```mermaid"+`
 graph LR
 	id
-`+"```", string(source[fence.Segment.Start:fence.Segment.Stop]))
+`+"```\n", string(source[fence.Segment.Start:fence.Segment.Stop]))
 	}
 
 }
@@ -94,7 +94,7 @@ sequenceDiagram
     Alice->>+John: John, can you hear me?
     John-->>-Alice: Hi Alice, I can hear you!
     John-->>-Alice: I feel great!
-`+"```", string(source[fences[0].Segment.Start:fences[0].Segment.Stop]))
+`+"```\n", string(source[fences[0].Segment.Start:fences[0].Segment.Stop]))
 
 }
 
@@ -148,5 +148,56 @@ This is an example
 	require.NoError(err)
 
 	require.Len(fences, 0)
+
+}
+
+func TestParseWrappedFences(t *testing.T) {
+	require := require.New(t)
+
+	source := []byte(`
+# hello world
+	
+This is an example
+
+<details class="mermaid"><summary><img src="https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBpZFxuIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0K"></img></summary><p>
+
+` + "```mermaid" + `
+graph LR
+    id
+` + "```" + `
+</p></details>
+
+ok
+`)
+
+	root := goldmark.DefaultParser().Parse(text.NewReader(source))
+	wraps, err := mdt.ParseWrappedFences(source, root)
+	require.NoError(err)
+
+	require.Len(wraps, 1)
+	for _, wrap := range wraps {
+
+		require.Equal(`graph LR
+    id
+`, string(wrap.Block.Code.Mermaid))
+
+		require.Equal(`<details class="mermaid"><summary><img src="https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBpZFxuIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0K"></img></summary><p>
+
+`+"```mermaid"+`
+graph LR
+    id
+`+"```"+`
+</p></details>
+`, string(source[wrap.Segment.Start:wrap.Segment.Stop]))
+
+		require.Equal(`<details class="mermaid"><summary><img src="https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggTFJcbiAgICBpZFxuIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcImRlZmF1bHRcIlxufSIsInVwZGF0ZUVkaXRvciI6ZmFsc2UsImF1dG9TeW5jIjp0cnVlLCJ1cGRhdGVEaWFncmFtIjpmYWxzZX0K"></img></summary><p>
+
+`+"```mermaid"+`
+graph LR
+    id
+`+"```"+`
+</p></details>
+`, string(wrap.Marshal()))
+	}
 
 }

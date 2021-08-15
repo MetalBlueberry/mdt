@@ -24,7 +24,8 @@ func TestWrap(t *testing.T) {
 graph LR
     id
 `+"```"+`
-</p></details>`,
+</p></details>
+`,
 		string(wrap.Marshal()))
 
 }
@@ -52,7 +53,8 @@ sequenceDiagram
     John-->>-Alice: Hi Alice, I can hear you!
     John-->>-Alice: I feel great!
 `+"```"+`
-</p></details>`,
+</p></details>
+`,
 		string(wrap.Marshal()))
 
 }
